@@ -5,14 +5,8 @@ import crypto from "crypto";
 const userSchema = new Schema(
   {
     avatar: {
-      type: {
-        url: String,
-        localpath: String,
-      },
-      default: {
-        url: `https://placehold.co/600x400`,
-        localpath: "",
-      },
+      type: String,
+      required: true,
     },
     username: {
       type: String,
@@ -34,7 +28,7 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: true,
     },
     isEmailVerified: {
       type: Boolean,
