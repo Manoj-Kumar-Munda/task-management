@@ -3,6 +3,7 @@ import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ERROR_CODES } from "../utils/constants/error-codes.js";
 import { ApiResponse } from "../utils/api-response.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { email, username, password, fullName } = req.body;
@@ -10,7 +11,6 @@ const registerUser = asyncHandler(async (req, res) => {
   const isUserExists = await User.findOne({
     $or: [{ email }, { username }],
   });
-  console.log("user:", isUserExists);
 
   if (isUserExists) {
     throw new ApiError(
@@ -20,13 +20,20 @@ const registerUser = asyncHandler(async (req, res) => {
     );
   }
 
-  const avatar = req?.file?.path ?? "https://placehold.co/600x400";
+  const avatarLocalUrl = req?.file?.path;
+
+  const avatarUrl = await uploadOnCloudinary(avatarLocalUrl);
+
+  if (!avatarUrl) {
+    throw new ApiError(500, "Internal server error");
+  }
+
   const newUser = await User.create({
     email,
     username,
     fullName,
     password,
-    avatar,
+    avatar: avatarUrl,
   });
 
   if (!newUser) {

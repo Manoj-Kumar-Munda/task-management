@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -9,17 +11,19 @@ cloudinary.config({
 
 const uploadOnCloudinary = async (localFilePath) => {
   try {
-    if (!localFilePath) return null;
-    //upload the file on cloudinary
+    if (!localFilePath) {
+      return null;
+    }
+
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
       folder: "task-management",
     });
     fs.unlinkSync(localFilePath);
-    return response;
+    return response?.url;
   } catch (error) {
-    fs.unlinkSync(localFilePath);
     //remove the locally saved temp file as the up[load operation got failed
+    fs.unlinkSync(localFilePath);
     return null;
   }
 };
