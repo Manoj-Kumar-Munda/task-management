@@ -4,6 +4,8 @@ import { asyncHandler } from "../utils/async-handler.js";
 import { ERROR_CODES } from "../utils/constants/error-codes.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { emailVerificationMailGenContent, sendMail } from "../utils/mail.js";
+import crypto from "crypto";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { email, username, password, fullName } = req.body;
@@ -33,12 +35,29 @@ const registerUser = asyncHandler(async (req, res) => {
     username,
     fullName,
     password,
-    avatar: avatarUrl,
+    avatar: avatarUrl ?? "https://placehold.co/600x400",
   });
 
   if (!newUser) {
     throw new ApiError(500, "Internal server error");
   }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  newUser.emailVerificationToken = token;
+  await newUser.save();
+
+  const verificationUrl = `${process.env.BASE_URL}/api/v1/users/verify/${token}`;
+  await sendMail({
+    email,
+    subject: "Verify your email",
+    mailGenContent: emailVerificationMailGenContent(
+      newUser?.username,
+      verificationUrl,
+    ),
+  });
+
+  newUser.emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); //24h
+  await newUser.save();
 
   return res
     .status(201)

@@ -12,14 +12,14 @@ export const sendMail = async (options) => {
 
   var emailText = mailGenerator.generatePlaintext(options.mailGenContent);
   var emailHTML = mailGenerator.generate(options.mailGenContent);
-
+  
   const transporter = nodemailer.createTransport({
-    host: process.env.MAILTRAP_SMTP_HOST,
-    port: process.env.MAILTRAP_SMTP_PORT,
+    host: process.env.MAILTRAP_HOST,
+    port: process.env.MAILTRAP_PORT,
     secure: false,
     auth: {
-      user: process.env.MAILTRAP_SMTP_USER,
-      pass: process.env.MAILTRAP_SMTP_PASS,
+      user: process.env.MAILTRAP_USERNAME,
+      pass: process.env.MAILTRAP_PASSWORD,
     },
   });
 
@@ -52,7 +52,7 @@ export const emailVerificationMailGenContent = (username, verificationUrl) => {
         },
       },
       outro:
-        "Need help, or have questions? Just reply to this email we'd love o help.",
+        "Need help, or have questions? Just reply to this email we'd love to help.",
     },
   };
 };
