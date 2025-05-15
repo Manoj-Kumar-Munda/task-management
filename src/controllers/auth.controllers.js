@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/api-response.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { emailVerificationMailGenContent, sendMail } from "../utils/mail.js";
 import crypto from "crypto";
+import { isExpired } from "../utils/helpers.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { email, username, password, fullName } = req.body;
@@ -74,8 +75,25 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const { token } = req.params;
+  console.log("registerUser", token);
+
+  const user = await User.findOne({ emailVerificationToken: token });
+
+  if (!user) {
+    throw new ApiError(400, "Invalid token");
+  }
+
+  if (isExpired(user.emailVerificationExpiry)) {
+    throw new ApiError(400, "token expired");
+  }
+
+  user.isEmailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpiry = undefined;
+  await user.save();
+
+  return res.status(200).json(new ApiResponse(200, user, "Email verified"));
 });
 
 const resendVerificationEmail = asyncHandler(async (req, res) => {
