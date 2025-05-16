@@ -5,8 +5,7 @@ import { ERROR_CODES } from "../utils/constants/error-codes.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { emailVerificationMailGenContent, sendMail } from "../utils/mail.js";
-import crypto from "crypto";
-import { isExpired } from "../utils/helpers.js";
+import { generateRandomToken, isExpired } from "../utils/helpers.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { email, username, password, fullName } = req.body;
@@ -43,7 +42,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Internal server error");
   }
 
-  const token = crypto.randomBytes(32).toString("hex");
+  const token = generateRandomToken();
   newUser.emailVerificationToken = token;
   await newUser.save();
 
@@ -76,10 +75,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.params;
-  console.log("registerUser", token);
-
   const user = await User.findOne({ emailVerificationToken: token });
-
   if (!user) {
     throw new ApiError(400, "Invalid token");
   }
@@ -96,9 +92,36 @@ const verifyEmail = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user, "Email verified"));
 });
 
+//TODO: need to check what to get from the user in payload
 const resendVerificationEmail = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(403, "Email not registered");
+  }
+  if (user.isEmailVerified) {
+    throw new ApiError(400, "Email already verified");
+  }
+  const token = generateRandomToken();
+  user.emailVerificationToken = token;
+  await user.save();
+  const verificationUrl = `${process.env.BASE_URL}/api/v1/users/verify/${token}`;
+  await sendMail({
+    email,
+    subject: "Verify your email",
+    mailGenContent: emailVerificationMailGenContent(
+      user?.username,
+      verificationUrl,
+    ),
+  });
+
+  user.emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, [], "Verfication email sent"));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
