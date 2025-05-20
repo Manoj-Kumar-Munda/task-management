@@ -5,6 +5,7 @@ import {
   userLoginValidator,
 } from "../validators/index.js";
 import {
+  loginUser,
   registerUser,
   resendVerificationEmail,
   verifyEmail,
@@ -16,11 +17,10 @@ const router = Router();
 router
   .route("/register")
   .post(upload.single("avatar"), userLoginValidator(), validate, registerUser);
-
 router.route("/verify/:token").get(verifyEmail);
-
 router
   .route("/resend-verificationmail")
   .post(resendVerficationValidator(), validate, resendVerificationEmail);
+router.route("/login").post(userLoginValidator(), validate, loginUser);
 
 export default router;
