@@ -63,7 +63,7 @@ userSchema.pre("save", async function (next) {
 
 // can be access this using user.isPasswordCorrect()
 userSchema.methods.isPasswordCorrect = async function (password) {
-  await bcrypt.compare(password, this.password);
+  return await bcrypt.compare(password, this.password);
 };
 
 userSchema.methods.generateAccessToken = function () {
@@ -99,7 +99,7 @@ userSchema.methods.generateTemporaryToken = function () {
     .update(unHashedToken)
     .digest("hex");
 
-  const tokenExpiry = Date.now() + 20 * 60 * 1000;
+  const tokenExpiry = Date.now() + 24 * 60 * 1000;
 
   return { hashedToken, unHashedToken, tokenExpiry };
 };
