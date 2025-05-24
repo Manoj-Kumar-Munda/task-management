@@ -65,8 +65,64 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const { userId, password } = req.body;
+
+  const user = await User.findOne({
+    $or: [{ email: userId }, { username: userId }],
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found.");
+  }
+
+  const isPasswordMatched = await user.isPasswordCorrect(password);
+
+  if (!isPasswordMatched) {
+    throw new ApiError(
+      401,
+      "Password not matched",
+      ERROR_CODES.AUTH.INVALID_CREDENTIALS,
+    );
+  }
+
+  if (!user.isEmailVerified) {
+    throw new ApiError(
+      401,
+      "User not verified",
+      ERROR_CODES.AUTH.USER_NOT_VERIFIED,
+    );
+  }
+
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  const updatedUser = await User.findById(user._id).select(
+    "-password -refreshToken -emailVerificationToken",
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { user: updatedUser, accessToken },
+        "User logged in",
+      ),
+    );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
