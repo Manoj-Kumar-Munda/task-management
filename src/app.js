@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(
 
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("/public"));
+app.use(cookieParser());
 app.use(express.json());
 //router imports
 import healthCheckRouter from "./routes/healthcheck.routes.js";
