@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { validate } from "../middlewares/validator.middleware.js";
 import {
+  changePasswordValidator,
+  forgotPasswordValidator,
   resendVerficationValidator,
   userLoginValidator,
   userRegistrationValidator,
 } from "../validators/index.js";
 import {
+  changeCurrentPassword,
+  forgotPassword,
   loginUser,
   logoutUser,
   registerUser,
@@ -33,5 +37,13 @@ router
 router.route("/login").post(userLoginValidator(), validate, loginUser);
 
 router.route("/logout").post(verifyToken, logoutUser);
+
+router
+  .route("/forgot-password")
+  .post(forgotPasswordValidator(), validate, forgotPassword);
+
+router
+  .route("/change-password/:token")
+  .post(changePasswordValidator(), validate, changeCurrentPassword);
 
 export default router;

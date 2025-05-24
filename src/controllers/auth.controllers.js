@@ -4,8 +4,14 @@ import { asyncHandler } from "../utils/async-handler.js";
 import { ERROR_CODES } from "../utils/constants/error-codes.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { emailVerificationMailGenContent, sendMail } from "../utils/mail.js";
+import {
+  emailVerificationMailGenContent,
+  forgotPasswordMailGenContent,
+  sendMail,
+} from "../utils/mail.js";
 import { generateRandomToken, isExpired } from "../utils/helpers.js";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { email, username, password, fullName } = req.body;
@@ -42,6 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Internal server error");
   }
 
+  //TODO: use fn defined in User model
   const token = generateRandomToken();
   newUser.emailVerificationToken = token;
   await newUser.save();
@@ -87,7 +94,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (!user.isEmailVerified) {
     throw new ApiError(
-      401,
+      400,
       "User not verified",
       ERROR_CODES.AUTH.USER_NOT_VERIFIED,
     );
@@ -191,18 +198,123 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const refreshToken = req?.cookies?.refreshToken;
+
+  if (!refreshToken) {
+    throw new ApiError(400, "refreshToken is required");
+  }
+
+  const decodedToken = jwt.verify(
+    refreshToken,
+    process.env.REFRESH_TOKEN_SECRET,
+  );
+  console.log(decodedToken);
+
+  const user = await User.findById(decodedToken?._id);
+
+  if (!user) {
+    throw new ApiError(400, "Inavalid token");
+  }
+
+  const newAccessToken = user.generateAccessToken();
+  const newRefreshToken = user.generateRefreshToken();
+
+  res.cookie("accessToken", newAccessToken, {
+    httpOnly: true,
+    secure: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+  res.cookie("refreshToken", newRefreshToken, {
+    httpOnly: true,
+    secure: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        { accessToken: newAccessToken },
+        "new tokens generated",
+      ),
+    );
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(400, "user not registered");
+  }
+
+  // hashedToken -> db , unHashedToken -> response
+  const { hashedToken, unHashedToken, tokenExpiry } =
+    user.generateTemporaryToken();
+
+  const updatedUser = await User.findOneAndUpdate(
+    { email },
+    {
+      forgotPasswordToken: hashedToken,
+      forgotPasswordExpiry: tokenExpiry,
+    },
+  );
+
+  if (!updatedUser) {
+    throw new ApiError(500, "Internal server error");
+  }
+
+  //send forgot password email -> send FE forgot password page url
+  const resetPasswordUrl = `${process.env.BASE_URL}/api/v1/users/reset-password/${unHashedToken}`;
+
+  await sendMail({
+    email,
+    subject: "Reset your password",
+    mailGenContent: forgotPasswordMailGenContent(
+      user?.username,
+      resetPasswordUrl,
+    ),
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Forgot password mail sent"));
 });
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const receivedToken = req?.params?.token;
+
+  const { oldPassword, newPassword } = req.body;
+
+  const hashedReceivedToken = crypto
+    .createHash("sha256")
+    .update(receivedToken)
+    .digest("hex");
+
+  const user = await User.findOne({ forgotPasswordToken: hashedReceivedToken });
+
+  if (!user) {
+    throw new ApiError(400, "Invalid token");
+  }
+
+  if (isExpired(user?.forgotPasswordExpiry)) {
+    throw new ApiError(409, "token expired");
+  }
+
+  const isPasswordMatched = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordMatched) {
+    throw new ApiError(400, "Wrong password");
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password updated successfully"));
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
