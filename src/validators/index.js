@@ -57,8 +57,28 @@ const resendVerficationValidator = () => {
   ];
 };
 
+const forgotPasswordValidator = () => {
+  return [
+    body("email")
+      .trim()
+      .notEmpty()
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Email is invalid"),
+  ];
+};
+
+const changePasswordValidator = () => {
+  return [
+    body("oldPassword").notEmpty().withMessage("Old password is required"),
+    body("newPassword").notEmpty().withMessage("New password is required"),
+  ];
+};
+
 export {
   userRegistrationValidator,
   userLoginValidator,
   resendVerficationValidator,
+  forgotPasswordValidator,
+  changePasswordValidator,
 };
