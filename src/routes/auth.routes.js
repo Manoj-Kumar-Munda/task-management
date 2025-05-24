@@ -7,11 +7,13 @@ import {
 } from "../validators/index.js";
 import {
   loginUser,
+  logoutUser,
   registerUser,
   resendVerificationEmail,
   verifyEmail,
 } from "../controllers/auth.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -29,5 +31,7 @@ router
   .post(resendVerficationValidator(), validate, resendVerificationEmail);
 
 router.route("/login").post(userLoginValidator(), validate, loginUser);
+
+router.route("/logout").post(verifyToken, logoutUser);
 
 export default router;

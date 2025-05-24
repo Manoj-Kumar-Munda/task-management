@@ -126,7 +126,17 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  console.log("registerUser");
+  const user = req.user;
+
+  user.refreshToken = undefined;
+  await user.save();
+
+  res.clearCookie("accessToken", { httpOnly: true, sameSite: "strict" });
+  res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
