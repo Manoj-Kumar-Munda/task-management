@@ -318,8 +318,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const user = req.user;
+
+  return res.status(200).json(new ApiResponse(200, user, "user data"));
 });
 
 export {

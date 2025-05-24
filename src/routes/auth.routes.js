@@ -10,6 +10,7 @@ import {
 import {
   changeCurrentPassword,
   forgotPassword,
+  getCurrentUser,
   loginUser,
   logoutUser,
   registerUser,
@@ -45,5 +46,7 @@ router
 router
   .route("/change-password/:token")
   .post(changePasswordValidator(), validate, changeCurrentPassword);
+
+router.route("/me").get(verifyToken, getCurrentUser);
 
 export default router;
