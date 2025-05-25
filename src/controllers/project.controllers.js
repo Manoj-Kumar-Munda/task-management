@@ -3,6 +3,9 @@ import { Project } from "../models/project.models.js";
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import { ProjectMember } from "../models/projectmember.models.js";
+import { AvailableUserRoles } from "../utils/constants/constants.js";
+import { User } from "../models/user.models.js";
 
 const getProjects = asyncHandler(async (req, res) => {
   const projects = await Project.findOne({
@@ -72,13 +75,58 @@ const updateProject = asyncHandler(async (req, res) => {
 });
 
 const deleteProject = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const projectId = req.params.projectId;
+  if (!projectId) {
+    throw new ApiError(400, "Project ID is required");
+  }
+
+  const project = await Project.findByIdAndDelete(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Project deleted successfully"));
 });
 
 const addProjectToMember = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const { user: userId, role } = req.body;
+  const { projectId } = req.params;
+
+  const userIdObject = new mongoose.Types.ObjectId(`${userId}`);
+  const projectIdObject = new mongoose.Types.ObjectId(`${projectId}`);
+
+  const project = await Project.findById(projectIdObject);
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+  const user = await User.findById(userIdObject);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (!AvailableUserRoles.includes(role)) {
+    throw new ApiError(400, "Invalid role provided");
+  }
+
+  const isRoleAlreadyAssigned = await ProjectMember.findOne({
+    user: userIdObject,
+    project: projectIdObject,
+  });
+  if (isRoleAlreadyAssigned) {
+    throw new ApiError(409, "User already assigned to project");
+  }
+
+  const projectMember = await ProjectMember.create({
+    user: userId,
+    project: projectId,
+    role,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, projectMember, "User added to project"));
 });
 
 const getProjectMembers = asyncHandler(async (req, res) => {

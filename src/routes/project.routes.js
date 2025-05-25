@@ -1,9 +1,14 @@
 import { Router } from "express";
 import { verifyToken } from "../middlewares/auth.middleware.js";
-import { createProjectValidator } from "../validators/project.validators.js";
+import {
+  addProjectToMemberValidator,
+  createProjectValidator,
+} from "../validators/project.validators.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import {
+  addProjectToMember,
   createProject,
+  deleteProject,
   getProjectById,
   getProjects,
   updateProject,
@@ -19,6 +24,16 @@ router
 router
   .route("/:projectId")
   .get(verifyToken, getProjectById)
-  .put(verifyToken, createProjectValidator(), validate, updateProject);
+  .put(verifyToken, createProjectValidator(), validate, updateProject)
+  .delete(verifyToken, deleteProject);
+
+router
+  .route("/:projectId/members")
+  .post(
+    verifyToken,
+    addProjectToMemberValidator(),
+    validate,
+    addProjectToMember,
+  );
 
 export default router;
