@@ -1,4 +1,5 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
+import { AvailableUserRoles } from "../utils/constants/constants.js";
 
 const createProjectValidator = () => {
   return [
@@ -11,4 +12,23 @@ const createProjectValidator = () => {
   ];
 };
 
-export { createProjectValidator };
+const addProjectToMemberValidator = () => {
+  return [
+    body("user")
+      .trim()
+      .notEmpty()
+      .isString()
+      .withMessage("User ID is required"),
+    param("projectId")
+      .trim()
+      .notEmpty()
+      .withMessage("Project ID is required"),
+    body("role")
+      .isString()
+      .withMessage("Role must be a string")
+      .isIn(AvailableUserRoles)
+      .withMessage("Invalid role"),
+  ];
+};
+
+export { createProjectValidator, addProjectToMemberValidator };
