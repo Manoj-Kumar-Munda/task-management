@@ -18,9 +18,11 @@ app.use(express.json());
 //router imports
 import healthCheckRouter from "./routes/healthcheck.routes.js";
 import userRouter from "./routes/auth.routes.js";
+import projectRouter from "./routes/project.routes.js";
 
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/projects", projectRouter);
 
 app.use((err, req, res, next) => {
   const statusCode = err?.statusCode || 500;
