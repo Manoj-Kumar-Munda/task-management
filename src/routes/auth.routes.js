@@ -11,6 +11,7 @@ import {
   changeCurrentPassword,
   forgotPassword,
   getCurrentUser,
+  getUsers,
   loginUser,
   logoutUser,
   registerUser,
@@ -48,5 +49,7 @@ router
   .post(changePasswordValidator(), validate, changeCurrentPassword);
 
 router.route("/me").get(verifyToken, getCurrentUser);
+
+router.get("/", verifyToken, getUsers);
 
 export default router;

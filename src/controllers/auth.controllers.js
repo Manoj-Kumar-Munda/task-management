@@ -323,6 +323,16 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user, "user data"));
 });
 
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}).select(
+    "-password -refreshToken -emailVerificationToken",
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, users, "users fetched successfully"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -333,4 +343,5 @@ export {
   forgotPassword,
   changeCurrentPassword,
   getCurrentUser,
+  getUsers,
 };
