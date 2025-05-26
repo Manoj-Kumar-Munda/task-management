@@ -10,6 +10,7 @@ import {
   createProject,
   deleteProject,
   getProjectById,
+  getProjectMembers,
   getProjects,
   updateProject,
 } from "../controllers/project.controllers.js";
@@ -34,6 +35,7 @@ router
     addProjectToMemberValidator(),
     validate,
     addProjectToMember,
-  );
+  )
+  .get(verifyToken, getProjectMembers);
 
 export default router;

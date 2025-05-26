@@ -130,8 +130,82 @@ const addProjectToMember = asyncHandler(async (req, res) => {
 });
 
 const getProjectMembers = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-  console.log("registerUser");
+  const { projectId } = req.params;
+
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  const projectMembers = await Project.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(`${projectId}`),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "createdBy",
+        foreignField: "_id",
+        as: "createdBy",
+        pipeline: [
+          {
+            $project: {
+              _id: 1,
+              username: 1,
+              avatar: 1,
+              email: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $unwind: {
+        path: "$createdBy",
+      },
+    },
+    {
+      $lookup: {
+        from: "projectmembers",
+        localField: "_id",
+        foreignField: "project",
+        as: "projectmembers",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "user",
+              foreignField: "_id",
+              as: "user",
+              pipeline: [
+                {
+                  $project: {
+                    _id: 1,
+                    username: 1,
+                    avatar: 1,
+                    email: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$user",
+          },
+        ],
+      },
+    },
+  ]);
+
+  if (!projectMembers || projectMembers.length === 0) {
+    throw new ApiError(404, "No members found for this project");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, projectMembers[0], "Project members fetched"));
 });
 
 const updateProjectMembers = asyncHandler(async (req, res) => {
