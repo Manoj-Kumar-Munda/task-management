@@ -19,10 +19,7 @@ const addProjectToMemberValidator = () => {
       .notEmpty()
       .isString()
       .withMessage("User ID is required"),
-    param("projectId")
-      .trim()
-      .notEmpty()
-      .withMessage("Project ID is required"),
+    param("projectId").trim().notEmpty().withMessage("Project ID is required"),
     body("role")
       .isString()
       .withMessage("Role must be a string")
@@ -31,4 +28,23 @@ const addProjectToMemberValidator = () => {
   ];
 };
 
-export { createProjectValidator, addProjectToMemberValidator };
+const updateMemberRoleValidator = () => {
+  return [
+    param("memberId").trim().notEmpty().withMessage("memberId is required"),
+    param("projectId").trim().notEmpty().withMessage("rojectId is required"),
+    body("role")
+      .trim()
+      .notEmpty()
+      .withMessage("role is required")
+      .isString()
+      .withMessage("role must be a string")
+      .isIn(AvailableUserRoles)
+      .withMessage("Invalid role"),
+  ];
+};
+
+export {
+  createProjectValidator,
+  addProjectToMemberValidator,
+  updateMemberRoleValidator,
+};
