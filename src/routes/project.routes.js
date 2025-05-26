@@ -3,15 +3,18 @@ import { verifyToken } from "../middlewares/auth.middleware.js";
 import {
   addProjectToMemberValidator,
   createProjectValidator,
+  updateMemberRoleValidator,
 } from "../validators/project.validators.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import {
   addProjectToMember,
   createProject,
+  deleteMember,
   deleteProject,
   getProjectById,
   getProjectMembers,
   getProjects,
+  updateMemberRole,
   updateProject,
 } from "../controllers/project.controllers.js";
 
@@ -37,5 +40,10 @@ router
     addProjectToMember,
   )
   .get(verifyToken, getProjectMembers);
+
+router
+  .route("/:projectId/members/:memberId")
+  .put(verifyToken, updateMemberRoleValidator(), validate, updateMemberRole)
+  .delete(verifyToken, deleteMember);
 
 export default router;
