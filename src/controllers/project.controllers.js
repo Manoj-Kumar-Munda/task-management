@@ -38,6 +38,7 @@ const getProjectById = asyncHandler(async (req, res) => {
 });
 
 const createProject = asyncHandler(async (req, res) => {
+  // TODO:add the project creator to the ProjectMember collection with role as PROJECT_ADMIN
   const { name, description } = req.body;
 
   const creatorId = new mongoose.Types.ObjectId(`${req.user._id}`);

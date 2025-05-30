@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { verifyToken } from "../middlewares/auth.middleware.js";
+import {
+  validateProjectPermissions,
+  verifyToken,
+} from "../middlewares/auth.middleware.js";
 import {
   addProjectToMemberValidator,
   createProjectValidator,
@@ -17,6 +20,7 @@ import {
   updateMemberRole,
   updateProject,
 } from "../controllers/project.controllers.js";
+import { UserRolesEnum } from "../utils/constants/constants.js";
 
 const router = Router();
 
@@ -35,6 +39,10 @@ router
   .route("/:projectId/members")
   .post(
     verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
     addProjectToMemberValidator(),
     validate,
     addProjectToMember,
@@ -43,7 +51,23 @@ router
 
 router
   .route("/:projectId/members/:memberId")
-  .put(verifyToken, updateMemberRoleValidator(), validate, updateMemberRole)
-  .delete(verifyToken, deleteMember);
+  .put(
+    verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
+    updateMemberRoleValidator(),
+    validate,
+    updateMemberRole,
+  )
+  .delete(
+    verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
+    deleteMember,
+  );
 
 export default router;
