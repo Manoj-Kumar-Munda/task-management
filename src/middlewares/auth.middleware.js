@@ -27,7 +27,7 @@ export const verifyToken = asyncHandler(async (req, res, next) => {
 
 export const validateProjectPermissions = (roles = []) =>
   asyncHandler(async (req, res, next) => {
-    const { projectId } = req.params;
+    const projectId = req.params.projectId || req.query.projectId;
     const user = req.user;
 
     if (!projectId) {

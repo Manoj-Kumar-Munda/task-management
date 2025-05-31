@@ -42,4 +42,28 @@ const createTaskValidator = () => {
   ];
 };
 
-export { createTaskValidator };
+const updateTaskValidator = () => {
+  return [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Invalid TaskId"),
+    body("title")
+      .optional()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage("Title must be less than 100 characters"),
+    body("description")
+      .optional()
+      .trim()
+      .isLength({ max: 500 })
+      .withMessage("Description must be less than 500 characters"),
+    body("assignedTo")
+      .optional()
+      .isMongoId()
+      .withMessage("Invalid user ID for Assigned To"),
+  ];
+};
+
+export { createTaskValidator, updateTaskValidator };

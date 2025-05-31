@@ -3,8 +3,11 @@ import {
   validateProjectPermissions,
   verifyToken,
 } from "../middlewares/auth.middleware.js";
-import { createTask } from "../controllers/task.controllers.js";
-import { createTaskValidator } from "../validators/task.validators.js";
+import { createTask, updateTask } from "../controllers/task.controllers.js";
+import {
+  createTaskValidator,
+  updateTaskValidator,
+} from "../validators/task.validators.js";
 import { UserRolesEnum } from "../utils/constants/constants.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { validate } from "../middlewares/validator.middleware.js";
@@ -23,6 +26,19 @@ router
     createTaskValidator(),
     validate,
     createTask,
+  );
+
+router
+  .route("/:taskId")
+  .put(
+    verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
+    updateTaskValidator(),
+    validate,
+    updateTask,
   );
 
 export default router;

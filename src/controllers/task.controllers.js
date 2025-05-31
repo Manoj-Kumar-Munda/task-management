@@ -8,7 +8,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const createTask = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
   const { title, description, assignedTo } = req.body;
-
+  
   const project = await Project.findById(projectId);
   if (!project) {
     throw new ApiError(404, "Project not found");
@@ -46,4 +46,31 @@ const createTask = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, { task }, "Task created successfully"));
 });
 
-export { createTask };
+const updateTask = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+  const { title, description, assignedTo } = req.body;
+
+  console.log("Updating task with ID:", taskId);
+
+  const updatedTask = await Task.findByIdAndUpdate(
+    taskId,
+    {
+      title,
+      description,
+      assignedTo,
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!updatedTask) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updateTask, "Task updated successfully"));
+});
+
+export { createTask, updateTask };
