@@ -66,4 +66,20 @@ const updateTaskValidator = () => {
   ];
 };
 
-export { createTaskValidator, updateTaskValidator };
+const updateStatusValidator = () => {
+  return [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Invalid TaskId"),
+    body("status")
+      .notEmpty()
+      .withMessage("Status is required")
+      .trim()
+      .isIn(AvailableTaskStatus)
+      .withMessage(`Status must be one of: ${AvailableTaskStatus.join(", ")}`),
+  ];
+};
+
+export { createTaskValidator, updateTaskValidator, updateStatusValidator };

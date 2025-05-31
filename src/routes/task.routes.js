@@ -3,9 +3,14 @@ import {
   validateProjectPermissions,
   verifyToken,
 } from "../middlewares/auth.middleware.js";
-import { createTask, updateTask } from "../controllers/task.controllers.js";
+import {
+  createTask,
+  updateStatus,
+  updateTask,
+} from "../controllers/task.controllers.js";
 import {
   createTaskValidator,
+  updateStatusValidator,
   updateTaskValidator,
 } from "../validators/task.validators.js";
 import { UserRolesEnum } from "../utils/constants/constants.js";
@@ -39,6 +44,19 @@ router
     updateTaskValidator(),
     validate,
     updateTask,
+  )
+  .patch(
+    verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+      UserRolesEnum.MEMBER,
+    ]),
+    updateStatusValidator(),
+    validate,
+    updateStatus,
   );
+
+router.route("/:taskId");
 
 export default router;
