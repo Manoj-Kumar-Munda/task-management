@@ -1,4 +1,8 @@
 import mongoose, { Schema } from "mongoose";
+import {
+  AvailableTaskStatus,
+  TaskStatusEnum,
+} from "../utils/constants/constants.js";
 
 const taskSchema = new Schema(
   {
@@ -25,6 +29,17 @@ const taskSchema = new Schema(
       ref: "User",
       required: true,
     },
+    status: {
+      type: String,
+      enum: AvailableTaskStatus,
+      default: TaskStatusEnum.TODO,
+    },
+    attatchments: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
   },
   { timestamps: true },
 );
