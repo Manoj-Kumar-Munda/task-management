@@ -6,17 +6,20 @@ import {
 import { createTask } from "../controllers/task.controllers.js";
 import { createTaskValidator } from "../validators/task.validators.js";
 import { UserRolesEnum } from "../utils/constants/constants.js";
+import { upload } from "../middlewares/multer.middleware.js";
+import { validate } from "../middlewares/validator.middleware.js";
 
 const router = Router();
 
 router
-  .route("/")
+  .route("/:projectId")
   .post(
     verifyToken,
     validateProjectPermissions([
       UserRolesEnum.ADMIN,
       UserRolesEnum.PROJECT_ADMIN,
     ]),
+    upload.array("attachments"),
     createTaskValidator(),
     validate,
     createTask,

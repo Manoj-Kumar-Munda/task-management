@@ -19,10 +19,11 @@ app.use(express.json());
 import healthCheckRouter from "./routes/healthcheck.routes.js";
 import userRouter from "./routes/auth.routes.js";
 import projectRouter from "./routes/project.routes.js";
-
+import taskRouter from "./routes/task.routes.js";
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/projects", projectRouter);
+app.use("/api/v1/tasks", taskRouter);
 
 app.use((err, req, res, next) => {
   const statusCode = err?.statusCode || 500;

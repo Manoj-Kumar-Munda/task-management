@@ -34,7 +34,7 @@ const taskSchema = new Schema(
       enum: AvailableTaskStatus,
       default: TaskStatusEnum.TODO,
     },
-    attatchments: [
+    attachments: [
       {
         type: String,
         trim: true,

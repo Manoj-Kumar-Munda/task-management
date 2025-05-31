@@ -74,8 +74,8 @@ router
   );
 
 //tasks
-router
-  .route("/:projectId/tasks")
-  .post(verifyToken, createTaskValidator(), validate, createTask);
+// router
+//   .route("/:projectId/tasks")
+//   .post(verifyToken, createTaskValidator(), validate, createTask);
 
 export default router;

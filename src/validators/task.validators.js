@@ -1,6 +1,7 @@
 import { body, param } from "express-validator";
+import { AvailableTaskStatus } from "../utils/constants/constants.js";
 
-const createTaskValidator = (req, res, next) => {
+const createTaskValidator = () => {
   return [
     param("projectId")
       .notEmpty()
@@ -23,6 +24,21 @@ const createTaskValidator = (req, res, next) => {
       .withMessage("Assigned To is required")
       .isMongoId()
       .withMessage("Invalid user ID for Assigned To"),
+    body("status")
+      .optional()
+      .trim()
+      .isIn(AvailableTaskStatus)
+      .withMessage(`Status must be one of: ${AvailableTaskStatus.join(", ")}`),
+    body("attachments")
+      .optional()
+      .isArray()
+      .withMessage("attachments must be an array")
+      .custom((value) => {
+        if (value.some((item) => typeof item !== "string")) {
+          throw new Error("Invalid attatchment url");
+        }
+        return true;
+      }),
   ];
 };
 
