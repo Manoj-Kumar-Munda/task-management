@@ -23,11 +23,6 @@ const createTaskValidator = (req, res, next) => {
       .withMessage("Assigned To is required")
       .isMongoId()
       .withMessage("Invalid user ID for Assigned To"),
-    body("assignedBy")
-      .notEmpty()
-      .withMessage("Assigned By is required")
-      .isMongoId()
-      .withMessage("Invalid user ID for Assigned By"),
   ];
 };
 

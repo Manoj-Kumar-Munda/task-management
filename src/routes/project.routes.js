@@ -8,6 +8,8 @@ import {
   createProjectValidator,
   updateMemberRoleValidator,
 } from "../validators/project.validators.js";
+
+import { createTaskValidator } from "../validators/task.validators.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import {
   addProjectToMember,
@@ -21,6 +23,7 @@ import {
   updateProject,
 } from "../controllers/project.controllers.js";
 import { UserRolesEnum } from "../utils/constants/constants.js";
+import { createTask } from "../controllers/task.controllers.js";
 
 const router = Router();
 
@@ -69,5 +72,10 @@ router
     ]),
     deleteMember,
   );
+
+//tasks
+router
+  .route("/:projectId/tasks")
+  .post(verifyToken, createTaskValidator(), validate, createTask);
 
 export default router;
