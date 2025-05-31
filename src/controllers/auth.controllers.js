@@ -71,6 +71,7 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, newUser, "User registred successfully"));
 });
 
+// TODO: remove forgotPasswordExpiry and forgotPasswordToken from response
 const loginUser = asyncHandler(async (req, res) => {
   const { userId, password } = req.body;
 
