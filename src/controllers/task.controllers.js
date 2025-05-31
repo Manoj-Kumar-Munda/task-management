@@ -99,11 +99,6 @@ const getTasksByProjectId = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Project ID is required");
   }
 
-  const project = await Project.findById(projectId);
-  if (!project) {
-    throw new ApiError(404, "Project not found");
-  }
-
   const tasks = await Task.find({ project: projectId });
 
   if (!tasks || tasks.length === 0) {
@@ -115,4 +110,45 @@ const getTasksByProjectId = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tasks, "Tasks retrieved successfully"));
 });
 
-export { createTask, updateTask, updateStatus, getTasksByProjectId };
+const getTaskById = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+
+  if (!taskId) {
+    throw new ApiError(400, "Task ID is required");
+  }
+
+  const task = await Task.findById(taskId);
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task, "Task retrieved successfully"));
+});
+
+const deleteTask = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+
+  if (!taskId) {
+    throw new ApiError(400, "Task ID is required");
+  }
+
+  const deletedTask = await Task.findByIdAndDelete(taskId);
+  if (!deletedTask) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, deletedTask, "Task deleted successfully"));
+});
+
+export {
+  createTask,
+  updateTask,
+  updateStatus,
+  getTasksByProjectId,
+  getTaskById,
+  deleteTask,
+};

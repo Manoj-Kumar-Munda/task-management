@@ -5,6 +5,8 @@ import {
 } from "../middlewares/auth.middleware.js";
 import {
   createTask,
+  deleteTask,
+  getTaskById,
   getTasksByProjectId,
   updateStatus,
   updateTask,
@@ -37,6 +39,7 @@ router
 
 router
   .route("/:taskId")
+  .get(verifyToken, getTaskById)
   .put(
     verifyToken,
     validateProjectPermissions([
@@ -49,11 +52,21 @@ router
   )
   .patch(
     verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.MEMBER,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
     updateStatusValidator(),
     validate,
     updateStatus,
+  )
+  .delete(
+    verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
+    deleteTask,
   );
-
-router.route("/:taskId");
 
 export default router;
