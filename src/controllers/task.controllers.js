@@ -92,4 +92,27 @@ const updateStatus = asyncHandler(async (req, res) => {
     );
 });
 
-export { createTask, updateTask, updateStatus };
+const getTasksByProjectId = asyncHandler(async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!projectId) {
+    throw new ApiError(400, "Project ID is required");
+  }
+
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  const tasks = await Task.find({ project: projectId });
+
+  if (!tasks || tasks.length === 0) {
+    throw new ApiError(404, "No tasks found for this project");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, tasks, "Tasks retrieved successfully"));
+});
+
+export { createTask, updateTask, updateStatus, getTasksByProjectId };

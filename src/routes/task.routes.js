@@ -5,6 +5,7 @@ import {
 } from "../middlewares/auth.middleware.js";
 import {
   createTask,
+  getTasksByProjectId,
   updateStatus,
   updateTask,
 } from "../controllers/task.controllers.js";
@@ -31,7 +32,8 @@ router
     createTaskValidator(),
     validate,
     createTask,
-  );
+  )
+  .get(verifyToken, getTasksByProjectId);
 
 router
   .route("/:taskId")
@@ -47,11 +49,6 @@ router
   )
   .patch(
     verifyToken,
-    validateProjectPermissions([
-      UserRolesEnum.ADMIN,
-      UserRolesEnum.PROJECT_ADMIN,
-      UserRolesEnum.MEMBER,
-    ]),
     updateStatusValidator(),
     validate,
     updateStatus,
