@@ -4,7 +4,10 @@ import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ProjectMember } from "../models/projectmember.models.js";
-import { AvailableUserRoles } from "../utils/constants/constants.js";
+import {
+  AvailableUserRoles,
+  UserRolesEnum,
+} from "../utils/constants/constants.js";
 import { User } from "../models/user.models.js";
 
 const getProjects = asyncHandler(async (req, res) => {
@@ -37,23 +40,50 @@ const getProjectById = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, project, "project data fetched successfully"));
 });
 
+//creates a new project and adds the creator as a member with admin role
 const createProject = asyncHandler(async (req, res) => {
-  // TODO:add the project creator to the ProjectMember collection with role as PROJECT_ADMIN
   const { name, description } = req.body;
 
   const creatorId = new mongoose.Types.ObjectId(`${req.user._id}`);
 
-  const project = await Project.create({
-    name,
-    description,
-    createdBy: creatorId,
-  });
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const project = await Project.create(
+      [
+        {
+          name,
+          description,
+          createdBy: creatorId,
+        },
+      ],
+      { session },
+    );
+    if (!project || project.length === 0) {
+      throw new ApiError(500, "Failed to create project");
+    }
 
-  if (!project) {
-    throw new ApiError(500, "Failed to create project. Try again");
+    await ProjectMember.create(
+      [
+        {
+          user: creatorId,
+          project: project[0]._id,
+          role: UserRolesEnum.PROJECT_ADMIN,
+        },
+      ],
+      { session },
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+    return res
+      .status(201)
+      .json(new ApiResponse(201, project, "Project created"));
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(500, error ?? "Failed to create project");
   }
-
-  return res.status(201).json(new ApiResponse(201, project, "Project created"));
 });
 
 const updateProject = asyncHandler(async (req, res) => {
@@ -75,19 +105,37 @@ const updateProject = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, project, "Project updated successfully"));
 });
 
+// Deletes a project and its associated members
 const deleteProject = asyncHandler(async (req, res) => {
   const projectId = req.params.projectId;
   if (!projectId) {
     throw new ApiError(400, "Project ID is required");
   }
 
-  const project = await Project.findByIdAndDelete(projectId);
-  if (!project) {
-    throw new ApiError(404, "Project not found");
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const project = await Project.findByIdAndDelete(projectId, { session });
+
+    if (!project) {
+      throw new ApiError(404, "Project not found");
+    }
+
+    await ProjectMember.deleteMany(
+      { project: new mongoose.Types.ObjectId(`${projectId}`) },
+      { session },
+    );
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Project deleted successfully"));
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(500, error ?? "Failed to delete project");
   }
-  return res
-    .status(200)
-    .json(new ApiResponse(200, null, "Project deleted successfully"));
 });
 
 const addProjectToMember = asyncHandler(async (req, res) => {
