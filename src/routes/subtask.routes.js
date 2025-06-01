@@ -2,7 +2,6 @@ import {
   createSubtask,
   updateSubtask,
   deleteSubtask,
-  updateSubtaskCompletion,
   getAllSubTasks,
 } from "../controllers/subtask.controllers.js";
 import { Router } from "express";
@@ -13,7 +12,6 @@ import {
 import { UserRolesEnum } from "../utils/constants/constants.js";
 import {
   createSubtaskValidator,
-  updateSubtaskStatusValidator,
   updateSubtaskValidator,
 } from "../validators/subtask.validators.js";
 import { validate } from "../middlewares/validator.middleware.js";
@@ -46,12 +44,6 @@ router
     validate,
     updateSubtask,
   )
-  .patch(
-    verifyToken,
-    updateSubtaskStatusValidator(),
-    validate,
-    updateSubtaskCompletion,
-  )
   .delete(
     verifyToken,
     validateProjectPermissions([
@@ -61,3 +53,5 @@ router
     validate,
     deleteSubtask,
   );
+
+export default router;
