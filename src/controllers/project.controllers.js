@@ -11,9 +11,7 @@ import {
 import { User } from "../models/user.models.js";
 
 const getProjects = asyncHandler(async (req, res) => {
-  const projects = await Project.findOne({
-    createdBy: new mongoose.Types.ObjectId(`${req?.user?._id}`),
-  });
+  const projects = await Project.find();
   if (!projects) {
     throw new ApiError(404, "No projects created");
   }
@@ -301,6 +299,48 @@ const deleteMember = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Project member deleted"));
 });
 
+const getProjectsByMemberId = asyncHandler(async (req, res) => {
+  const { memberId } = req.params;
+
+  if (!memberId) {
+    throw new ApiError(400, "Member ID is required");
+  }
+
+  const projects = await ProjectMember.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(`${memberId}`),
+      },
+    },
+    {
+      $lookup: {
+        from: "projects",
+        localField: "project",
+        foreignField: "_id",
+        as: "projectDetails",
+      },
+    },
+    {
+      $unwind: "$projectDetails",
+    },
+    {
+      $project: {
+        _id: "$projectDetails._id",
+        name: "$projectDetails.name",
+        description: "$projectDetails.description",
+      },
+    },
+  ]);
+
+  if (!projects || projects.length === 0) {
+    throw new ApiError(404, "No projects found for this member");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, projects, "Projects fetched successfully"));
+});
+
 export {
   getProjects,
   getProjectById,
@@ -312,4 +352,5 @@ export {
   updateProjectMembers,
   updateMemberRole,
   deleteMember,
+  getProjectsByMemberId,
 };

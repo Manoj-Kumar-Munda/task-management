@@ -19,17 +19,11 @@ import {
   getProjectById,
   getProjectMembers,
   getProjects,
+  getProjectsByMemberId,
   updateMemberRole,
   updateProject,
 } from "../controllers/project.controllers.js";
 import { UserRolesEnum } from "../utils/constants/constants.js";
-import {
-  createTask,
-  getTasksByProjectId,
-} from "../controllers/task.controllers.js";
-import { upload } from "../middlewares/multer.middleware.js";
-import { createNote, getNotes } from "../controllers/note.controllers.js";
-import { createNoteValidator } from "../validators/note.validators.js";
 
 const router = Router();
 
@@ -60,6 +54,7 @@ router
 
 router
   .route("/:projectId/members/:memberId")
+  .get(verifyToken, getProjectsByMemberId)
   .put(
     verifyToken,
     validateProjectPermissions([
@@ -78,36 +73,5 @@ router
     ]),
     deleteMember,
   );
-
-//tasks
-router
-  .route("/:projectId/tasks")
-  .post(
-    verifyToken,
-    validateProjectPermissions([
-      UserRolesEnum.ADMIN,
-      UserRolesEnum.PROJECT_ADMIN,
-    ]),
-    upload.array("attachments"),
-    createTaskValidator(),
-    validate,
-    createTask,
-  )
-  .get(verifyToken, getTasksByProjectId);
-
-//notes
-router
-  .route("/:projectId/notes")
-  .post(
-    verifyToken,
-    validateProjectPermissions([
-      UserRolesEnum.ADMIN,
-      UserRolesEnum.PROJECT_ADMIN,
-    ]),
-    createNoteValidator(),
-    validate,
-    createNote,
-  )
-  .get(verifyToken, getNotes);
 
 export default router;
