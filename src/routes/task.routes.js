@@ -23,21 +23,6 @@ import { validate } from "../middlewares/validator.middleware.js";
 const router = Router();
 
 router
-  .route("/:projectId")
-  .post(
-    verifyToken,
-    validateProjectPermissions([
-      UserRolesEnum.ADMIN,
-      UserRolesEnum.PROJECT_ADMIN,
-    ]),
-    upload.array("attachments"),
-    createTaskValidator(),
-    validate,
-    createTask,
-  )
-  .get(verifyToken, getTasksByProjectId);
-
-router
   .route("/:taskId")
   .get(verifyToken, getTaskById)
   .put(

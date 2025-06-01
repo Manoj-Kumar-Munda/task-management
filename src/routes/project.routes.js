@@ -23,7 +23,13 @@ import {
   updateProject,
 } from "../controllers/project.controllers.js";
 import { UserRolesEnum } from "../utils/constants/constants.js";
-import { createTask } from "../controllers/task.controllers.js";
+import {
+  createTask,
+  getTasksByProjectId,
+} from "../controllers/task.controllers.js";
+import { upload } from "../middlewares/multer.middleware.js";
+import { createNote, getNotes } from "../controllers/note.controllers.js";
+import { createNoteValidator } from "../validators/note.validators.js";
 
 const router = Router();
 
@@ -74,8 +80,34 @@ router
   );
 
 //tasks
-// router
-//   .route("/:projectId/tasks")
-//   .post(verifyToken, createTaskValidator(), validate, createTask);
+router
+  .route("/:projectId/tasks")
+  .post(
+    verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
+    upload.array("attachments"),
+    createTaskValidator(),
+    validate,
+    createTask,
+  )
+  .get(verifyToken, getTasksByProjectId);
+
+//notes
+router
+  .route("/:projectId/notes")
+  .post(
+    verifyToken,
+    validateProjectPermissions([
+      UserRolesEnum.ADMIN,
+      UserRolesEnum.PROJECT_ADMIN,
+    ]),
+    createNoteValidator(),
+    validate,
+    createNote,
+  )
+  .get(verifyToken, getNotes);
 
 export default router;
